@@ -6,6 +6,8 @@ using Object = UnityEngine.Object;
 
 namespace UnityRuntimeGuid
 {
+    [DisallowMultipleComponent]
+    [ExecuteInEditMode]
     public class SceneGuidRegistry : MonoBehaviour
     {
         private const string GameObjectName = "SceneGuidRegistry";
@@ -13,7 +15,18 @@ namespace UnityRuntimeGuid
         private static readonly Dictionary<Scene, SceneGuidRegistry> SceneGuidRegistries = new();
 
         [SerializeField] private GuidRegistry<SceneGuidRegistryEntry> registry = new();
-        
+
+        public void Awake()
+        {
+            var sceneGuidRegistries = FindObjectsByType<SceneGuidRegistry>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+            if (sceneGuidRegistries.Length > 1)
+            {
+                Debug.LogWarning("Only one scene GUID registry is allowed per scene. Deleting.");
+                DestroyImmediate(this);
+            }
+        }
+
         public bool TryAdd(SceneGuidRegistryEntry guidEntry)
         {
             return registry.TryAdd(guidEntry);
