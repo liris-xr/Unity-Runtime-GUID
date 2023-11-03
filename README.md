@@ -68,6 +68,8 @@ public class MyRegistryUpdater : IPreprocessBuildWithReport
             EditorSceneManager.MarkSceneDirty(activeScene);
             EditorSceneManager.SaveScene(activeScene);
 
+            // Update the registries for all scenes (including their assets dependencies).
+            // Force include the active scene.
             GuidRegistryUpdater.UpdateAssetsGuidRegistry(GuidRegistryUpdater.GetAllScenePaths(true));
             GuidRegistryUpdater.UpdateScenesGuidRegistry(GuidRegistryUpdater.GetAllScenePaths(true));
         };
@@ -76,6 +78,9 @@ public class MyRegistryUpdater : IPreprocessBuildWithReport
     public void OnPreprocessBuild(BuildReport report)
     {
         // Update the registries when building the application
+        
+        // Update the registries for all scenes in the build (including their assets dependencies).
+        // Do not force include the active scene (only include builded scenes).
         GuidRegistryUpdater.UpdateAssetsGuidRegistry(GuidRegistryUpdater.GetAllScenePaths(false));
         GuidRegistryUpdater.UpdateScenesGuidRegistry(GuidRegistryUpdater.GetAllScenePaths(false));
     }
