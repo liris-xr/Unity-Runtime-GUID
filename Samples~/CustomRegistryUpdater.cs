@@ -6,11 +6,11 @@ using UnityEngine.SceneManagement;
 using UnityRuntimeGuid.Editor;
 
 [InitializeOnLoad]
-public class MyRegistryUpdater : IPreprocessBuildWithReport
+public class CustomRegistryUpdater : IPreprocessBuildWithReport
 {
     public int callbackOrder => int.MaxValue;
 
-    static MyRegistryUpdater()
+    static CustomRegistryUpdater()
     {
         // Update the registries when entering play mode in the Editor
         EditorApplication.playModeStateChanged += state =>

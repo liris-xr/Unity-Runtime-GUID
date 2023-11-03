@@ -12,6 +12,13 @@
     "GUID",
     "Runtime"
   ],
+  "samples": [
+    {
+      "displayName": "Unity-Runtime-GUID Samples",
+      "description": "Contains sample scripts for the Unity-Runtime-GUID package",
+      "path": "Samples~/"
+    }
+  ],
   "author": {
     "name": "Charles JAVERLIAT",
     "email": "charles.javerliat@liris.cnrs.fr",

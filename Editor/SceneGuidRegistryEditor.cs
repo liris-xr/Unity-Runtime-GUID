@@ -27,7 +27,7 @@ namespace UnityRuntimeGuid.Editor
             
             if (GUILayout.Button("Clear"))
                 GuidRegistryUpdater.ClearScenesGuidRegistry(new[] { sceneGuidRegistry.gameObject.scene.path });
-
+            
             GUILayout.BeginHorizontal();
             GUILayout.Label("Search by name:", GUILayout.ExpandWidth(false));
             _searchName = GUILayout.TextField(_searchName, EditorStyles.toolbarSearchField);

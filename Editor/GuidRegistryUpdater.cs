@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using UnityEditor;
@@ -6,6 +7,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
 
@@ -32,11 +34,14 @@ namespace UnityRuntimeGuid.Editor
 
         public static void UpdateAssetsGuidRegistry(IEnumerable<string> scenePaths)
         {
-            var assetsGuidRegistry = AssetsGuidRegistry.Instance;
+            if (Application.isPlaying)
+                throw new Exception($"Calling {nameof(UpdateAssetsGuidRegistry)} in play mode is not allowed.");
+            
+            var assetsGuidRegistry = AssetsGuidRegistry.GetOrCreate();
             var prevAssetsGuid = assetsGuidRegistry.Copy();
 
             assetsGuidRegistry.Clear();
-            AssetsGuidRegistry.CommitRegistry(assetsGuidRegistry);
+            assetsGuidRegistry.Commit();
 
             var assets = new List<Object>();
             assets.Add(GraphicsSettings.currentRenderPipeline);
@@ -65,22 +70,29 @@ namespace UnityRuntimeGuid.Editor
                 if (asset.GetType().Namespace == typeof(UnityEditor.Editor).Namespace)
                     continue;
                 var hasPrevGuid = prevAssetsGuid.TryGetValue(asset, out var prevAssetGuid);
-                assetsGuidRegistry.TryAdd(hasPrevGuid ? prevAssetGuid : AssetsGuidRegistry.CreateNewEntry(asset));
+
+                if (hasPrevGuid)
+                    assetsGuidRegistry.TryAdd(prevAssetGuid);
+                else
+                    assetsGuidRegistry.GetOrCreateEntry(asset);
             }
 
-            AssetsGuidRegistry.CommitRegistry(assetsGuidRegistry);
+            assetsGuidRegistry.Commit();
         }
 
         public static void ClearAssetsGuidRegistry()
         {
-            var assetsGuidRegistry = AssetsGuidRegistry.Instance;
+            var assetsGuidRegistry = AssetsGuidRegistry.GetOrCreate();
             assetsGuidRegistry.Clear();
-            AssetsGuidRegistry.CommitRegistry(assetsGuidRegistry);
+            assetsGuidRegistry.Commit();
         }
 
         [SuppressMessage("ReSharper", "CoVariantArrayConversion")]
         public static void UpdateScenesGuidRegistry(IEnumerable<string> scenePaths)
         {
+            if (Application.isPlaying)
+                throw new Exception($"Calling {nameof(UpdateScenesGuidRegistry)} in play mode is not allowed.");
+            
             var prevScenePath = SceneManager.GetActiveScene().path;
 
             foreach (var scenePath in scenePaths)
@@ -91,19 +103,24 @@ namespace UnityRuntimeGuid.Editor
                 var sceneObjects = new List<Object>();
 
                 var scene = SceneManager.GetActiveScene();
-                var sceneObjectsGuidRegistry = SceneGuidRegistry.GetOrCreateInScene(scene);
+                var sceneObjectsGuidRegistry = SceneGuidRegistry.GetOrCreate(scene);
                 var prevSceneObjectsGuid = sceneObjectsGuidRegistry.Copy();
                 sceneObjectsGuidRegistry.Clear();
 
                 sceneObjects.AddRange(scene.GetRootGameObjects());
-                sceneObjects.AddRange(EditorUtility.CollectDependencies(scene.GetRootGameObjects()));
+                sceneObjects.AddRange(EditorUtility.CollectDependencies(scene.GetRootGameObjects()).Where(dependency => dependency != null));
 
                 foreach (var sceneObject in sceneObjects.Where(sceneObject => !IsAsset(sceneObject)))
                 {
+                    if (sceneObject.GetType().Namespace == typeof(UnityEditor.Editor).Namespace)
+                        continue;
+                    
                     var hasPrevGuid = prevSceneObjectsGuid.TryGetValue(sceneObject, out var prevSceneObjectGuid);
-                    sceneObjectsGuidRegistry.TryAdd(hasPrevGuid
-                        ? prevSceneObjectGuid
-                        : SceneGuidRegistry.CreateNewEntry(sceneObject));
+
+                    if (hasPrevGuid)
+                        sceneObjectsGuidRegistry.TryAdd(prevSceneObjectGuid);
+                    else
+                        sceneObjectsGuidRegistry.GetOrCreateEntry(sceneObject);
                 }
 
                 EditorSceneManager.MarkSceneDirty(scene);
@@ -124,7 +141,7 @@ namespace UnityRuntimeGuid.Editor
                     EditorSceneManager.OpenScene(scenePath);
 
                 var scene = SceneManager.GetActiveScene();
-                var sceneObjectsGuidRegistry = SceneGuidRegistry.GetOrCreateInScene(scene);
+                var sceneObjectsGuidRegistry = SceneGuidRegistry.GetOrCreate(scene);
                 sceneObjectsGuidRegistry.Clear();
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);

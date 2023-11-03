@@ -15,74 +15,25 @@ namespace UnityRuntimeGuid
     {
         private const string BuiltinResourcesPath = "Resources/unity_builtin_extra";
         private const string BuiltinExtraResourcesPath = "Library/unity default resources";
-        
+
         private static string _assetsGuidRegistryName = "AssetsGuidRegistry";
         private static string _assetsGuidRegistryPath = $"Resources/{_assetsGuidRegistryName}.asset";
-
+        
+        private static AssetsGuidRegistry _instance;
+        
         [SerializeField] private GuidRegistry<AssetGuidRegistryEntry> registry = new();
 
-        private static AssetsGuidRegistry _instance;
-
-        public static AssetsGuidRegistry Instance
+        public static AssetsGuidRegistry GetOrCreate()
         {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = GetRegistry();
-                }
-
+            if (_instance != null)
                 return _instance;
-            }
-        }
-
-        private void OnEnable()
-        {
-            _instance = this;
-        }
-
+            
 #if UNITY_EDITOR
-        private static string GetRegistryAssetPath()
-        {
-            var fullPath = Path.GetFullPath(Path.Combine(Application.dataPath, _assetsGuidRegistryPath));
-            Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
-            var configUri = new Uri(fullPath);
-            var projectUri = new Uri(Application.dataPath);
-            var relativeUri = projectUri.MakeRelativeUri(configUri);
-            return relativeUri.ToString();
-        }
+            var registryAssetPath = GetAssetPath();
 
-        public static void CommitRegistry(AssetsGuidRegistry registry)
-        {
-            var registryAssetPath = GetRegistryAssetPath();
-            if (AssetDatabase.GetAssetPath(registry) != registryAssetPath)
-            {
-                Debug.LogWarningFormat("The asset path of AssetsGuidRegistry is wrong. Expect {0}, get {1}",
-                    registryAssetPath, AssetDatabase.GetAssetPath(registry));
-            }
-
-            EditorUtility.SetDirty(registry);
-        }
-
-        internal void AddToPreloadedAssets()
-        {
-            var preloadedAssets = PlayerSettings.GetPreloadedAssets().ToList();
-            if (preloadedAssets.Contains(this)) return;
-            preloadedAssets.Add(this);
-            PlayerSettings.SetPreloadedAssets(preloadedAssets.ToArray());
-        }
-#endif
-
-        public static AssetsGuidRegistry GetRegistry()
-        {
-            AssetsGuidRegistry registry = null;
-#if UNITY_EDITOR
-            var registryAssetPath = GetRegistryAssetPath();
             try
             {
-                registry =
-                    AssetDatabase.LoadAssetAtPath(registryAssetPath, typeof(AssetsGuidRegistry)) as
-                        AssetsGuidRegistry;
+                _instance = AssetDatabase.LoadAssetAtPath(registryAssetPath, typeof(AssetsGuidRegistry)) as AssetsGuidRegistry;
             }
             catch (Exception e)
             {
@@ -90,21 +41,19 @@ namespace UnityRuntimeGuid
                     e.Message);
             }
 
-            if (registry == null)
-            {
-                registry = CreateInstance<AssetsGuidRegistry>();
-                AssetDatabase.CreateAsset(registry, registryAssetPath);
-                registry.AddToPreloadedAssets();
-            }
+            if (_instance != null) return _instance;
+            _instance = CreateInstance<AssetsGuidRegistry>();
+            AssetDatabase.CreateAsset(_instance, registryAssetPath);
+            _instance.AddToPreloadedAssets();
 #else
-            registry = Resources.Load<AssetsGuidRegistry>(_assetsGuidRegistryName);
-            if (registry == null)
+            _instance = Resources.Load<AssetsGuidRegistry>(_assetsGuidRegistryName);
+            if (_instance == null)
             {
                 Debug.LogWarning("Failed to load assets GUID registry. Using default registry instead.");
-                registry = CreateInstance<AssetsGuidRegistry>();
+                _instance = CreateInstance<AssetsGuidRegistry>();
             }
 #endif
-            return registry;
+            return _instance;
         }
 
         public bool TryAdd(AssetGuidRegistryEntry guidEntry)
@@ -131,31 +80,53 @@ namespace UnityRuntimeGuid
         {
             return registry.Remove(obj);
         }
-        
-        public AssetGuidRegistryEntry GetOrCreate(Object obj)
-        {
-            if (registry.TryGetValue(obj, out var assetGuidRegistryEntry)) return assetGuidRegistryEntry;
-            assetGuidRegistryEntry = CreateNewEntry(obj);
-            registry.TryAdd(assetGuidRegistryEntry);
-            return assetGuidRegistryEntry;
-        }
 
-        public static AssetGuidRegistryEntry CreateNewEntry(Object obj)
+        public AssetGuidRegistryEntry GetOrCreateEntry(Object obj)
         {
-            return new AssetGuidRegistryEntry
+            return registry.GetOrCreateEntry(obj, o => new AssetGuidRegistryEntry
             {
-                @object = obj,
+                @object = o,
 #if UNITY_EDITOR
-                guid = GetAssetGuid(obj),
-                assetBundlePath = GetFullAssetBundlePath(obj)
+                guid = GetAssetGuid(o),
+                assetBundlePath = GetFullAssetBundlePath(o)
 #else
                 guid = Guid.NewGuid().ToString(),
                 assetBundlePath = ""
 #endif
-            };
+            });
         }
 
 #if UNITY_EDITOR
+        private static string GetAssetPath()
+        {
+            var fullPath = Path.GetFullPath(Path.Combine(Application.dataPath, _assetsGuidRegistryPath));
+            Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+            var configUri = new Uri(fullPath);
+            var projectUri = new Uri(Application.dataPath);
+            var relativeUri = projectUri.MakeRelativeUri(configUri);
+            return relativeUri.ToString();
+        }
+
+        public void Commit()
+        {
+            var registryAssetPath = GetAssetPath();
+            if (AssetDatabase.GetAssetPath(this) != registryAssetPath)
+            {
+                Debug.LogWarningFormat("The asset path of AssetsGuidRegistry is wrong. Expect {0}, get {1}",
+                    registryAssetPath, AssetDatabase.GetAssetPath(this));
+            }
+
+            EditorUtility.SetDirty(this);
+        }
+
+        internal void AddToPreloadedAssets()
+        {
+            var preloadedAssets = PlayerSettings.GetPreloadedAssets().ToList();
+            if (preloadedAssets.Contains(this)) return;
+            preloadedAssets.Add(this);
+            PlayerSettings.SetPreloadedAssets(preloadedAssets.ToArray());
+        }
+        
         private static string GetAssetGuid(Object asset)
         {
             var path = AssetDatabase.GetAssetPath(asset);
@@ -180,5 +151,7 @@ namespace UnityRuntimeGuid
             return $"{prefix}:{assetType}:{path}:{asset.name}";
         }
 #endif
+        
+        
     }
 }

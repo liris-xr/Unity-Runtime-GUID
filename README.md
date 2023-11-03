@@ -38,56 +38,20 @@ In the Unity Package Manager, click the `+` button and `Add package from git URL
 
 ## Usage
 
-From a `UnityEditor` script, update the registries using the `GuidRegistryUpdater`. For instance on pre-build or before entering play mode in the editor.
+Example scripts are available in the [samples directory](Samples~/) of the project.
 
-<details>
-<summary>Click to see an example</summary>
+### Automatically update the registries
 
-```csharp
-using UnityEditor;
-using UnityEditor.Build;
-using UnityEditor.Build.Reporting;
-using UnityEditor.SceneManagement;
-using UnityEngine.SceneManagement;
-using UnityRuntimeGuid.Editor;
+If you want GUID that are consistent across executions, you need to generate them before running your application through the Unity Editor.
+To do so, from an editor script, update the registries using the `GuidRegistryUpdater`. For instance on pre-build or before entering play mode in the editor.
 
-[InitializeOnLoad]
-public class MyRegistryUpdater : IPreprocessBuildWithReport
-{
-    public int callbackOrder => int.MaxValue;
+See an example [here](Samples~/CustomRegistryUpdater.cs).
 
-    static MyRegistryUpdater()
-    {
-        // Update the registries when entering play mode in the Editor
-        EditorApplication.playModeStateChanged += state =>
-        {
-            if (state != PlayModeStateChange.ExitingEditMode)
-                return;
+### Access the GUIDs at runtime
 
-            var activeScene = SceneManager.GetActiveScene();
-            EditorSceneManager.MarkSceneDirty(activeScene);
-            EditorSceneManager.SaveScene(activeScene);
+You can access the GUIDs in the registries at runtime from anywhere in your application. If you try to get a GUID for an object not present in the registry, a new entry will be automatically generated with a random GUID.
 
-            // Update the registries for all scenes (including their assets dependencies).
-            // Force include the active scene.
-            GuidRegistryUpdater.UpdateAssetsGuidRegistry(GuidRegistryUpdater.GetAllScenePaths(true));
-            GuidRegistryUpdater.UpdateScenesGuidRegistry(GuidRegistryUpdater.GetAllScenePaths(true));
-        };
-    }
-
-    public void OnPreprocessBuild(BuildReport report)
-    {
-        // Update the registries when building the application
-        
-        // Update the registries for all scenes in the build (including their assets dependencies).
-        // Do not force include the active scene (only include builded scenes).
-        GuidRegistryUpdater.UpdateAssetsGuidRegistry(GuidRegistryUpdater.GetAllScenePaths(false));
-        GuidRegistryUpdater.UpdateScenesGuidRegistry(GuidRegistryUpdater.GetAllScenePaths(false));
-    }
-}
-```
-
-</details>
+See an example [here](Samples~/RuntimeGuidAccess.cs).
 
 ## Roadmap
 

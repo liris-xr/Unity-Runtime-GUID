@@ -18,6 +18,14 @@ namespace UnityRuntimeGuid
 
         public int Count => _guids.Count;
 
+        public T GetOrCreateEntry(Object obj, Func<Object, T> createEntryFunc)
+        {
+            if (TryGetValue(obj, out var registryEntry)) return registryEntry;
+            registryEntry = createEntryFunc(obj);
+            TryAdd(registryEntry);
+            return registryEntry;
+        }
+        
         public void Clear()
         {
             _guids.Clear();
@@ -37,20 +45,15 @@ namespace UnityRuntimeGuid
 
         public bool TryGetValue(Object obj, out T entry)
         {
-            if (obj == null)
-            {
-                entry = null;
-                return false;
-            }
+            if (obj != null) return _guids.TryGetValue(obj, out entry);
+            entry = null;
+            return false;
 
-            return _guids.TryGetValue(obj, out entry);
         }
 
         public bool Remove(Object obj)
         {
-            if (obj == null)
-                return false;
-            return _guids.Remove(obj);
+            return obj != null && _guids.Remove(obj);
         }
         
         public void OnBeforeSerialize()
@@ -70,16 +73,15 @@ namespace UnityRuntimeGuid
             _guids.Clear();
             foreach (var entry in entries.Where(entry => entry != null && entry.@object != null))
             {
-                if (entry.@object != null)
+                if (entry.@object == null) continue;
+                
+                try
                 {
-                    try
-                    {
-                        _guids.Add(entry.@object, entry);
-                    }
-                    catch (Exception)
-                    {
-                        // ignored
-                    }
+                    _guids.Add(entry.@object, entry);
+                }
+                catch (Exception)
+                {
+                    // ignored
                 }
             }
         }

@@ -94,12 +94,15 @@ namespace UnityRuntimeGuid.Editor
                         EditorGUILayout.TextField("GUID", guid.stringValue);
                         EditorGUILayout.TextField("Asset Bundle Path", assetBundlePath.stringValue);
                         GUI.enabled = true;
+                        
                         GUILayout.BeginHorizontal();
                         GUILayout.Space(EditorGUI.indentLevel * 10f);
+                        
                         if (GUILayout.Button("Remove"))
                         {
                             assetsGuidRegistry.Remove(@object.objectReferenceValue);
                         }
+                        
                         GUILayout.EndHorizontal();
                         EditorGUI.indentLevel = 1;
                     }
