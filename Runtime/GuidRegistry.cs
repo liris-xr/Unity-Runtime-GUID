@@ -85,5 +85,10 @@ namespace UnityRuntimeGuid
                 }
             }
         }
+
+        public List<T> GetAllEntries()
+        {
+            return entries;
+        }
     }
 }

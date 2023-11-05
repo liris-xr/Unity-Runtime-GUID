@@ -18,6 +18,8 @@ namespace UnityRuntimeGuid.Editor
 
         public override void OnInspectorGUI()
         {
+            var toolbarSearchCancelStyle = GUI.skin.FindStyle("ToolbarSeachCancelButton") ?? GUI.skin.FindStyle("ToolbarSearchCancelButton");
+            
             var assetsGuidRegistry = (AssetsGuidRegistry) target;
             
             serializedObject.Update();
@@ -34,7 +36,7 @@ namespace UnityRuntimeGuid.Editor
             GUILayout.BeginHorizontal();
             GUILayout.Label("Search by name:", GUILayout.ExpandWidth(false));
             _searchName = GUILayout.TextField(_searchName, EditorStyles.toolbarSearchField);
-            if (GUILayout.Button("", GUI.skin.FindStyle("ToolbarSeachCancelButton")))
+            if (GUILayout.Button("", GUI.skin.FindStyle("ToolbarSearchCancelButton")))
             {
                 _searchName = "";
                 GUI.FocusControl(null);
@@ -44,7 +46,7 @@ namespace UnityRuntimeGuid.Editor
             GUILayout.BeginHorizontal();
             GUILayout.Label("Search by type:", GUILayout.ExpandWidth(false));
             _searchType = GUILayout.TextField(_searchType, EditorStyles.toolbarSearchField);
-            if (GUILayout.Button("", GUI.skin.FindStyle("ToolbarSeachCancelButton")))
+            if (GUILayout.Button("", toolbarSearchCancelStyle))
             {
                 _searchType = "";
                 GUI.FocusControl(null);

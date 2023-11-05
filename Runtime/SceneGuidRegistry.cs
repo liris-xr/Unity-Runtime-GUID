@@ -15,13 +15,18 @@ namespace UnityRuntimeGuid
 
         private static readonly Dictionary<Scene, SceneGuidRegistry> SceneGuidRegistries = new();
 
+        [SerializeField] private string sceneGuid = Guid.NewGuid().ToString();
+
         [SerializeField] private GuidRegistry<SceneGuidRegistryEntry> registry = new();
 
+        public string SceneGuid => sceneGuid;
+        
         public void Awake()
         {
             var sceneGuidRegistries =
-                FindObjectsByType<SceneGuidRegistry>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            if (sceneGuidRegistries.Length <= 1) return;
+                FindObjectsByType<SceneGuidRegistry>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                    .Where(r => r.gameObject.scene == gameObject.scene);
+            if (sceneGuidRegistries.Count() <= 1) return;
             Debug.LogWarning("Only one scene GUID registry is allowed per scene. Deleting.");
             DestroyImmediate(this);
         }
@@ -61,6 +66,11 @@ namespace UnityRuntimeGuid
         public void Clear()
         {
             registry.Clear();
+        }
+
+        public List<SceneGuidRegistryEntry> GetAllEntries()
+        {
+            return registry.GetAllEntries();
         }
 
         public Dictionary<Object, SceneGuidRegistryEntry> Copy()
