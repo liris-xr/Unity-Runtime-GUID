@@ -14,11 +14,13 @@ namespace UnityRuntimeGuid
         private List<T> entries = new();
         
         [NonSerialized]
-        private Dictionary<Object, T> _guids = new();
+        private Dictionary<Object, T> _objectToGuid = new();
 
-        public int Count => _guids.Count;
+        [NonSerialized] private Dictionary<string, T> _guidToEntry = new();
 
-        public T GetOrCreateEntry(Object obj, Func<Object, T> createEntryFunc)
+        public int Count => _objectToGuid.Count;
+
+        public T GetOrCreateEntry(Object obj, System.Func<Object, T> createEntryFunc)
         {
             if (TryGetValue(obj, out var registryEntry)) return registryEntry;
             registryEntry = createEntryFunc(obj);
@@ -28,39 +30,57 @@ namespace UnityRuntimeGuid
         
         public void Clear()
         {
-            _guids.Clear();
+            _objectToGuid.Clear();
         }
 
         public bool TryAdd(T guidEntry)
         {
             if (guidEntry == null || guidEntry.@object == null)
                 return false;
-            return _guids.TryAdd(guidEntry.@object, guidEntry);
+
+            var added = _objectToGuid.TryAdd(guidEntry.@object, guidEntry);
+            
+            if(added)
+                _guidToEntry[guidEntry.guid] = guidEntry;
+            
+            return added;
         }
 
         public Dictionary<Object, T> Copy()
         {
-            return new Dictionary<Object, T>(_guids);
+            return new Dictionary<Object, T>(_objectToGuid);
         }
 
         public bool TryGetValue(Object obj, out T entry)
         {
-            if (obj != null) return _guids.TryGetValue(obj, out entry);
+            if (obj != null) return _objectToGuid.TryGetValue(obj, out entry);
             entry = null;
             return false;
+        }
 
+        public bool TryGetEntryByGuid(string guid, out T entry)
+        {
+            return _guidToEntry.TryGetValue(guid, out entry);
+        }
+        
+        public T GetEntryByGuid(string guid)
+        {
+            return _guidToEntry[guid];
         }
 
         public bool Remove(Object obj)
         {
-            return obj != null && _guids.Remove(obj);
+            if (!_objectToGuid.TryGetValue(obj, out var entry)) return false;
+            _guidToEntry.Remove(entry.guid);
+            _objectToGuid.Remove(obj);
+            return true;
         }
         
         public void OnBeforeSerialize()
         {
             entries ??= new List<T>();
             entries.Clear();
-            foreach (var (obj, entry) in _guids)
+            foreach (var (obj, entry) in _objectToGuid)
             {
                 if(obj != null)
                     entries.Add(entry);
@@ -69,15 +89,16 @@ namespace UnityRuntimeGuid
 
         public void OnAfterDeserialize()
         {
-            _guids ??= new Dictionary<Object, T>();
-            _guids.Clear();
+            _objectToGuid ??= new Dictionary<Object, T>();
+            _objectToGuid.Clear();
             foreach (var entry in entries.Where(entry => entry != null && entry.@object != null))
             {
                 if (entry.@object == null) continue;
                 
                 try
                 {
-                    _guids.Add(entry.@object, entry);
+                    _objectToGuid.Add(entry.@object, entry);
+                    _guidToEntry[entry.guid] = entry;
                 }
                 catch (Exception)
                 {

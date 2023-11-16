@@ -7,6 +7,7 @@ using Object = UnityEngine.Object;
 
 namespace UnityRuntimeGuid
 {
+    // TODO: refactor to extend GuidRegistry and make another class for the MonoBehavior
     [DisallowMultipleComponent]
     [ExecuteInEditMode]
     public class SceneGuidRegistry : MonoBehaviour
@@ -50,6 +51,7 @@ namespace UnityRuntimeGuid
             if (sceneObjectsGuidRegistry == null)
             {
                 var go = new GameObject(GameObjectName);
+                SceneManager.MoveGameObjectToScene(go, scene);
                 sceneObjectsGuidRegistry = go.AddComponent<SceneGuidRegistry>();
             }
 
@@ -81,6 +83,11 @@ namespace UnityRuntimeGuid
         public bool TryGetValue(Object obj, out SceneGuidRegistryEntry entry)
         {
             return registry.TryGetValue(obj, out entry);
+        }
+
+        public bool TryGetEntryByGuid(string guid, out SceneGuidRegistryEntry entry)
+        {
+            return registry.TryGetEntryByGuid(guid, out entry);
         }
 
         public bool Remove(Object obj)
