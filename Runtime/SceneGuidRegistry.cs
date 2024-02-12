@@ -35,9 +35,9 @@ namespace UnityRuntimeGuid
         public static SceneGuidRegistry GetOrCreate(Scene scene)
         {
             if (!scene.IsValid())
-                throw new Exception("Scene is invalid.");
+                throw new InvalidOperationException("Scene is invalid.");
             if (!scene.isLoaded)
-                throw new Exception("Scene is not loaded.");
+                throw new InvalidOperationException("Scene is not loaded.");
 
             SceneGuidRegistries.TryGetValue(scene, out var sceneObjectsGuidRegistry);
 
