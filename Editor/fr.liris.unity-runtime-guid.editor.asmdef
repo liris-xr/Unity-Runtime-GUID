@@ -2,7 +2,7 @@
   "name": "fr.liris.unity-runtime-guid.editor",
   "rootNamespace": "UnityRuntimeGuid",
   "references": [
-    "GUID:7337036dbbf0a8c4a99ad3544b02ffdd"
+    "fr.liris.unity-runtime-guid"
   ],
   "includePlatforms": [
     "Editor"
