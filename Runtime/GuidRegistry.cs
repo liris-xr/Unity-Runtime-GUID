@@ -20,7 +20,7 @@ namespace UnityRuntimeGuid
 
         public int Count => _objectToGuid.Count;
 
-        public T GetOrCreateEntry(Object obj, System.Func<Object, T> createEntryFunc)
+        public T GetOrCreateEntry(Object obj, Func<Object, T> createEntryFunc)
         {
             if (TryGetValue(obj, out var registryEntry)) return registryEntry;
             registryEntry = createEntryFunc(obj);
