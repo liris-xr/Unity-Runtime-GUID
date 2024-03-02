@@ -62,6 +62,23 @@ namespace UnityRuntimeGuid.Editor
                     var asset = AssetDatabase.LoadAssetAtPath<Object>(dependency);
                     if (assets.Contains(asset)) continue;
                     assets.Add(asset);
+
+                    // For prefabs, we also need to include its components
+                    if (asset is GameObject go)
+                    {
+                        foreach (var component in go.GetComponentsInChildren<Component>())
+                        {
+                            if (component is Renderer r)
+                            {
+                                assets.AddRange(r.sharedMaterials);
+                            }
+                            
+                            if (component is MeshFilter mf)
+                            {
+                                assets.Add(mf.sharedMesh);
+                            }
+                        }
+                    }
                 }
             }
 
