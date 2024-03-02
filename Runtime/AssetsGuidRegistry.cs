@@ -137,7 +137,7 @@ namespace UnityRuntimeGuid
 
         private static string GetFullAssetBundlePath(Object asset)
         {
-            if (!AssetDatabase.Contains(asset))
+            if (asset == null || !AssetDatabase.Contains(asset))
                 return "";
 
             var path = AssetDatabase.GetAssetPath(asset);
