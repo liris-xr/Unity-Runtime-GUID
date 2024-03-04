@@ -60,7 +60,8 @@ namespace UnityRuntimeGuid.Editor
                 foreach (var dependency in dependencies)
                 {
                     var asset = AssetDatabase.LoadAssetAtPath<Object>(dependency);
-                    if (assets.Contains(asset)) continue;
+                    if (assets.Contains(asset))
+                        continue;
                     assets.Add(asset);
 
                     // For prefabs, we also need to include its components
@@ -68,15 +69,9 @@ namespace UnityRuntimeGuid.Editor
                     {
                         foreach (var component in go.GetComponentsInChildren<Component>())
                         {
-                            if (component is Renderer r)
-                            {
-                                assets.AddRange(r.sharedMaterials);
-                            }
-                            
-                            if (component is MeshFilter mf)
-                            {
-                                assets.Add(mf.sharedMesh);
-                            }
+                            if (assets.Contains(component))
+                                continue;
+                            assets.Add(component);
                         }
                     }
                 }
