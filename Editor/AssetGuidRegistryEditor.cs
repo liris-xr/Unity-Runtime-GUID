@@ -9,6 +9,7 @@ namespace UnityRuntimeGuid.Editor
         private SerializedProperty _registryEntries;
 
         private string _searchName = "";
+        private string _searchGuid = "";
         private string _searchType = "";
 
         private void OnEnable()
@@ -18,6 +19,7 @@ namespace UnityRuntimeGuid.Editor
 
         public override void OnInspectorGUI()
         {
+            // Search toolbar style contains a typo in the name.
             var toolbarSearchCancelStyle = GUI.skin.FindStyle("ToolbarSeachCancelButton") ?? GUI.skin.FindStyle("ToolbarSearchCancelButton");
             
             var assetsGuidRegistry = (AssetsGuidRegistry) target;
@@ -36,7 +38,7 @@ namespace UnityRuntimeGuid.Editor
             GUILayout.BeginHorizontal();
             GUILayout.Label("Search by name:", GUILayout.ExpandWidth(false));
             _searchName = GUILayout.TextField(_searchName, EditorStyles.toolbarSearchField);
-            if (GUILayout.Button("", GUI.skin.FindStyle("ToolbarSearchCancelButton")))
+            if (GUILayout.Button("", toolbarSearchCancelStyle))
             {
                 _searchName = "";
                 GUI.FocusControl(null);
@@ -49,6 +51,16 @@ namespace UnityRuntimeGuid.Editor
             if (GUILayout.Button("", toolbarSearchCancelStyle))
             {
                 _searchType = "";
+                GUI.FocusControl(null);
+            }
+            GUILayout.EndHorizontal();
+            
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Search by GUID:", GUILayout.ExpandWidth(false));
+            _searchGuid = GUILayout.TextField(_searchGuid, EditorStyles.toolbarSearchField);
+            if (GUILayout.Button("", toolbarSearchCancelStyle))
+            {
+                _searchGuid = "";
                 GUI.FocusControl(null);
             }
             GUILayout.EndHorizontal();
@@ -73,13 +85,19 @@ namespace UnityRuntimeGuid.Editor
                     var assetBundlePath = entry.FindPropertyRelative("assetBundlePath");
                     var objectType = @object.objectReferenceValue.GetType().Name;
                     var objectName = @object.objectReferenceValue.name;
+                    var objectGuid = guid.stringValue;
 
-                    if (!string.IsNullOrEmpty(objectName) && !objectName.ToLower().Contains(_searchName.ToLower()))
+                    if (!string.IsNullOrEmpty(objectName) && !objectName.ToLower().StartsWith(_searchName.ToLower()))
                     {
                         continue;
                     }
 
-                    if (!string.IsNullOrEmpty(objectType) && !objectType.ToLower().Contains(_searchType.ToLower()))
+                    if (!string.IsNullOrEmpty(objectType) && !objectType.ToLower().StartsWith(_searchType.ToLower()))
+                    {
+                        continue;
+                    }
+                    
+                    if (!string.IsNullOrEmpty(objectGuid) && !objectGuid.ToLower().StartsWith(_searchGuid.ToLower()))
                     {
                         continue;
                     }

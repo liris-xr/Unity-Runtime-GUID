@@ -43,7 +43,7 @@ namespace UnityRuntimeGuid.Editor
             assetsGuidRegistry.Clear();
             assetsGuidRegistry.Commit();
 
-            var assets = new List<Object>();
+            var assets = new HashSet<Object>();
             assets.Add(GraphicsSettings.currentRenderPipeline);
             assets.Add(RenderSettings.skybox);
             assets.Add(RenderSettings.sun);
@@ -53,27 +53,45 @@ namespace UnityRuntimeGuid.Editor
             assets.Add(RenderSettings.customReflection);
 #endif
 
+            var openedScenes = new List<Scene>();
+            var openedScenesPath = new List<string>();
+            
+            for(var sceneIdx = 0; sceneIdx < SceneManager.sceneCount; sceneIdx++)
+            {
+                var scene = SceneManager.GetSceneAt(sceneIdx);
+                openedScenes.Add(scene);
+                openedScenesPath.Add(scene.path);
+            }
+            
             foreach (var scenePath in scenePaths)
             {
-                var dependencies = AssetDatabase.GetDependencies(scenePath, true);
+                bool wasOpened;
+                Scene scene;
+                
+                if (openedScenesPath.Contains(scenePath))
+                {
+                    wasOpened = true;
+                    scene = openedScenes[openedScenesPath.IndexOf(scenePath)];
+                }
+                else
+                {
+                    wasOpened = false;
+                    scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+                }
 
+                var rootGameObjects = scene.GetRootGameObjects().Cast<Object>().ToArray();
+                var dependencies = EditorUtility.CollectDependencies(rootGameObjects);
+                
                 foreach (var dependency in dependencies)
                 {
-                    var asset = AssetDatabase.LoadAssetAtPath<Object>(dependency);
-                    if (assets.Contains(asset))
+                    if(dependency.hideFlags == HideFlags.DontSaveInBuild)
                         continue;
-                    assets.Add(asset);
+                    assets.Add(dependency);
+                }
 
-                    // For prefabs, we also need to include its components
-                    if (asset is GameObject go)
-                    {
-                        foreach (var component in go.GetComponentsInChildren<Component>())
-                        {
-                            if (assets.Contains(component))
-                                continue;
-                            assets.Add(component);
-                        }
-                    }
+                if (!wasOpened)
+                {
+                    EditorSceneManager.CloseScene(scene, true);
                 }
             }
 

@@ -10,6 +10,7 @@ namespace UnityRuntimeGuid.Editor
 
         private string _searchName = "";
         private string _searchType = "";
+        private string _searchGuid = "";
 
         private void OnEnable()
         {
@@ -53,6 +54,16 @@ namespace UnityRuntimeGuid.Editor
                 GUI.FocusControl(null);
             }
             GUILayout.EndHorizontal();
+            
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Search by GUID:", GUILayout.ExpandWidth(false));
+            _searchGuid = GUILayout.TextField(_searchGuid, EditorStyles.toolbarSearchField);
+            if (GUILayout.Button("", toolbarSearchCancelStyle))
+            {
+                _searchGuid = "";
+                GUI.FocusControl(null);
+            }
+            GUILayout.EndHorizontal();
 
             EditorStyles.label.wordWrap = true;
 
@@ -73,13 +84,19 @@ namespace UnityRuntimeGuid.Editor
                     var @object = entry.FindPropertyRelative("object");
                     var objectType = @object.objectReferenceValue.GetType().Name;
                     var objectName = @object.objectReferenceValue.name;
+                    var objectGuid = guid.stringValue;
 
-                    if (!string.IsNullOrEmpty(objectName) && !objectName.ToLower().Contains(_searchName.ToLower()))
+                    if (!string.IsNullOrEmpty(objectName) && !objectName.ToLower().StartsWith(_searchName.ToLower()))
                     {
                         continue;
                     }
 
-                    if (!string.IsNullOrEmpty(objectType) && !objectType.ToLower().Contains(_searchType.ToLower()))
+                    if (!string.IsNullOrEmpty(objectType) && !objectType.ToLower().StartsWith(_searchType.ToLower()))
+                    {
+                        continue;
+                    }
+                    
+                    if (!string.IsNullOrEmpty(objectGuid) && !objectGuid.ToLower().StartsWith(_searchGuid.ToLower()))
                     {
                         continue;
                     }
