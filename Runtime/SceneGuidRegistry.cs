@@ -101,7 +101,7 @@ namespace UnityRuntimeGuid
                 new SceneGuidRegistryEntry
                 {
                     @object = obj,
-                    guid = Guid.NewGuid().ToString()
+                    guid = Guid.NewGuid().ToString("N")
                 });
         }
     }

@@ -90,7 +90,7 @@ namespace UnityRuntimeGuid
                 guid = GetAssetGuid(o),
                 assetBundlePath = GetFullAssetBundlePath(o)
 #else
-                guid = Guid.NewGuid().ToString(),
+                guid = Guid.NewGuid().ToString("N"),
                 assetBundlePath = ""
 #endif
             });
@@ -130,9 +130,17 @@ namespace UnityRuntimeGuid
         private static string GetAssetGuid(Object asset)
         {
             var path = AssetDatabase.GetAssetPath(asset);
-            var guid = AssetDatabase.GUIDFromAssetPath(path);
             var isBuiltin = path.Equals(BuiltinResourcesPath) || path.Equals(BuiltinExtraResourcesPath);
-            return guid.Empty() || isBuiltin ? Guid.NewGuid().ToString() : guid.ToString();
+
+            if (isBuiltin)
+                return Guid.NewGuid().ToString("N");
+            
+            var guid = AssetDatabase.GUIDFromAssetPath(path).ToString();
+            
+            if(string.IsNullOrEmpty(guid))
+                return Guid.NewGuid().ToString("N");
+            
+            return Guid.Parse(guid).ToString("N");
         }
 
         private static string GetFullAssetBundlePath(Object asset)
