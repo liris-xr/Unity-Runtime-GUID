@@ -66,14 +66,14 @@ namespace UnityRuntimeGuid
             registry.Clear();
         }
 
-        public Dictionary<Object, AssetGuidRegistryEntry> Copy()
+        public GuidRegistry<AssetGuidRegistryEntry> Copy()
         {
             return registry.Copy();
         }
 
         public bool TryGetValue(Object obj, out AssetGuidRegistryEntry entry)
         {
-            return registry.TryGetValue(obj, out entry);
+            return registry.TryGetEntry(obj, out entry);
         }
 
         public bool Remove(Object obj)

@@ -70,24 +70,24 @@ namespace UnityRuntimeGuid
             registry.Clear();
         }
 
-        public List<SceneGuidRegistryEntry> GetAllEntries()
+        public IReadOnlyList<SceneGuidRegistryEntry> GetAllEntries()
         {
             return registry.GetAllEntries();
         }
 
-        public Dictionary<Object, SceneGuidRegistryEntry> Copy()
+        public GuidRegistry<SceneGuidRegistryEntry> Copy()
         {
             return registry.Copy();
         }
 
-        public bool TryGetValue(Object obj, out SceneGuidRegistryEntry entry)
+        public bool TryGetEntry(Object obj, out SceneGuidRegistryEntry entry)
         {
-            return registry.TryGetValue(obj, out entry);
+            return registry.TryGetEntry(obj, out entry);
         }
 
-        public bool TryGetEntryByGuid(string guid, out SceneGuidRegistryEntry entry)
+        public bool TryGetEntry(string guid, out SceneGuidRegistryEntry entry)
         {
-            return registry.TryGetEntryByGuid(guid, out entry);
+            return registry.TryGetEntry(guid, out entry);
         }
 
         public bool Remove(Object obj)

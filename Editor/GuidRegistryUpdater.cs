@@ -84,6 +84,8 @@ namespace UnityRuntimeGuid.Editor
                 
                 foreach (var dependency in dependencies)
                 {
+                    if (dependency == null)
+                        continue;
                     if(dependency.hideFlags == HideFlags.DontSaveInBuild)
                         continue;
                     assets.Add(dependency);
@@ -99,7 +101,7 @@ namespace UnityRuntimeGuid.Editor
             {
                 if (asset.GetType().Namespace == typeof(UnityEditor.Editor).Namespace)
                     continue;
-                var hasPrevGuid = prevAssetsGuid.TryGetValue(asset, out var prevAssetGuid);
+                var hasPrevGuid = prevAssetsGuid.TryGetEntry(asset, out var prevAssetGuid);
 
                 if (hasPrevGuid)
                     assetsGuidRegistry.TryAdd(prevAssetGuid);
@@ -145,7 +147,7 @@ namespace UnityRuntimeGuid.Editor
                     if (sceneObject.GetType().Namespace == typeof(UnityEditor.Editor).Namespace)
                         continue;
                     
-                    var hasPrevGuid = prevSceneObjectsGuid.TryGetValue(sceneObject, out var prevSceneObjectGuid);
+                    var hasPrevGuid = prevSceneObjectsGuid.TryGetEntry(sceneObject, out var prevSceneObjectGuid);
 
                     if (hasPrevGuid)
                         sceneObjectsGuidRegistry.TryAdd(prevSceneObjectGuid);
