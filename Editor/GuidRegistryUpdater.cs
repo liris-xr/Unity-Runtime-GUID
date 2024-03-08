@@ -36,7 +36,7 @@ namespace UnityRuntimeGuid.Editor
         {
             if (Application.isPlaying)
                 throw new Exception($"Calling {nameof(UpdateAssetsGuidRegistry)} in play mode is not allowed.");
-            
+
             var assetsGuidRegistry = AssetsGuidRegistry.GetOrCreate();
             var prevAssetsGuid = assetsGuidRegistry.Copy();
 
@@ -44,30 +44,35 @@ namespace UnityRuntimeGuid.Editor
             assetsGuidRegistry.Commit();
 
             var assets = new HashSet<Object>();
-            assets.Add(GraphicsSettings.currentRenderPipeline);
-            assets.Add(RenderSettings.skybox);
-            assets.Add(RenderSettings.sun);
-#if UNITY_2022_1_OR_NEWER
-            assets.Add(RenderSettings.customReflectionTexture);
-#else
-            assets.Add(RenderSettings.customReflection);
+
+            for (var i = 0; i < QualitySettings.count; ++i)
+            {
+                var renderPipelineAsset = QualitySettings.GetRenderPipelineAssetAt(i);
+                assets.Add(renderPipelineAsset);
+            }
+
+            assets.Add(GraphicsSettings.defaultRenderPipeline);
+
+#if URP_ENABLED
+            var urpGlobalSettings = GraphicsSettings.GetSettingsForRenderPipeline<UnityEngine.Rendering.Universal.UniversalRenderPipeline>();
+            assets.Add(urpGlobalSettings);
 #endif
 
             var openedScenes = new List<Scene>();
             var openedScenesPath = new List<string>();
-            
-            for(var sceneIdx = 0; sceneIdx < SceneManager.sceneCount; sceneIdx++)
+
+            for (var sceneIdx = 0; sceneIdx < SceneManager.sceneCount; sceneIdx++)
             {
                 var scene = SceneManager.GetSceneAt(sceneIdx);
                 openedScenes.Add(scene);
                 openedScenesPath.Add(scene.path);
             }
-            
+
             foreach (var scenePath in scenePaths)
             {
                 bool wasOpened;
                 Scene scene;
-                
+
                 if (openedScenesPath.Contains(scenePath))
                 {
                     wasOpened = true;
@@ -81,12 +86,12 @@ namespace UnityRuntimeGuid.Editor
 
                 var rootGameObjects = scene.GetRootGameObjects().Cast<Object>().ToArray();
                 var dependencies = EditorUtility.CollectDependencies(rootGameObjects);
-                
+
                 foreach (var dependency in dependencies)
                 {
                     if (dependency == null)
                         continue;
-                    if(dependency.hideFlags == HideFlags.DontSaveInBuild)
+                    if (dependency.hideFlags == HideFlags.DontSaveInBuild)
                         continue;
                     assets.Add(dependency);
                 }
@@ -124,7 +129,7 @@ namespace UnityRuntimeGuid.Editor
         {
             if (Application.isPlaying)
                 throw new Exception($"Calling {nameof(UpdateScenesGuidRegistry)} in play mode is not allowed.");
-            
+
             var prevScenePath = SceneManager.GetActiveScene().path;
 
             foreach (var scenePath in scenePaths)
@@ -140,13 +145,14 @@ namespace UnityRuntimeGuid.Editor
                 sceneObjectsGuidRegistry.Clear();
 
                 sceneObjects.AddRange(scene.GetRootGameObjects());
-                sceneObjects.AddRange(EditorUtility.CollectDependencies(scene.GetRootGameObjects()).Where(dependency => dependency != null));
+                sceneObjects.AddRange(EditorUtility.CollectDependencies(scene.GetRootGameObjects())
+                    .Where(dependency => dependency != null));
 
                 foreach (var sceneObject in sceneObjects.Where(sceneObject => !IsAsset(sceneObject)))
                 {
                     if (sceneObject.GetType().Namespace == typeof(UnityEditor.Editor).Namespace)
                         continue;
-                    
+
                     var hasPrevGuid = prevSceneObjectsGuid.TryGetEntry(sceneObject, out var prevSceneObjectGuid);
 
                     if (hasPrevGuid)
