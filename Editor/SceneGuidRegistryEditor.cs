@@ -82,6 +82,10 @@ namespace UnityRuntimeGuid.Editor
 
                     var guid = entry.FindPropertyRelative("guid");
                     var @object = entry.FindPropertyRelative("object");
+                    
+                    if(@object == null || @object.objectReferenceValue == null)
+                        continue;
+                    
                     var objectType = @object.objectReferenceValue.GetType().Name;
                     var objectName = @object.objectReferenceValue.name;
                     var objectGuid = guid.stringValue;

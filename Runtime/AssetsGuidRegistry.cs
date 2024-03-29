@@ -95,6 +95,11 @@ namespace UnityRuntimeGuid
 #endif
             });
         }
+        
+        public IEnumerable<AssetGuidRegistryEntry> GetAllEntries()
+        {
+            return registry.GetAllEntries();
+        }
 
 #if UNITY_EDITOR
         private static string GetAssetPath()
