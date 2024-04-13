@@ -16,7 +16,7 @@ namespace UnityRuntimeGuid
 
         private static readonly Dictionary<Scene, SceneGuidRegistry> SceneGuidRegistries = new();
 
-        [SerializeField] private string sceneGuid = Guid.NewGuid().ToString();
+        [SerializeField] private string sceneGuid = Guid.NewGuid().ToString("N");
 
         [SerializeField] private GuidRegistry<SceneGuidRegistryEntry> registry = new();
 
