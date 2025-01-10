@@ -1,6 +1,6 @@
 {
   "name": "fr.liris.unity-runtime-guid",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "displayName": "Unity-Runtime-GUID",
   "description": "Unity Runtime GUID system for consistently identifying objects at runtime across executions.",
   "unity": "2021.3",
