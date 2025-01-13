@@ -23,6 +23,15 @@ namespace UnityRuntimeGuid
             
             _objectIdToGuidCache.Clear();
             _guidToEntryCache.Clear();
+			
+			// Remove reference to assets that have been deleted at build time (e.g. probuilder meshes)
+            for (var i = entries.Count - 1; i >= 0; i--)
+            {
+                if (entries[i] == null || entries[i].@object == null)
+                {
+                    entries.RemoveAt(i);
+                }
+            }
             
             foreach (var entry in entries)
             {
