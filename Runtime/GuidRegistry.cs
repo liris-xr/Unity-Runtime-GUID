@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -8,23 +9,21 @@ namespace UnityRuntimeGuid
     [Serializable]
     public class GuidRegistry<T> where T : GuidRegistryEntry
     {
-        private bool _isCacheInitialized;
-        private Dictionary<int, T>  _objectIdToGuidCache = new();
-        private Dictionary<string, T> _guidToEntryCache = new();
-        
+        private Dictionary<int, T> _objectIdToGuidCache;
+        private Dictionary<string, T> _guidToEntryCache;
+
         [SerializeField] private List<T> entries = new();
-        
-        public void InitializeCache()
+
+        private bool IsCacheInitialized => _objectIdToGuidCache != null && _guidToEntryCache != null &&
+                                           _objectIdToGuidCache.Count == entries.Count &&
+                                           _guidToEntryCache.Count == entries.Count;
+
+        private void InitializeCache()
         {
-            if (_isCacheInitialized)
-                return;
-            
-            _isCacheInitialized = true;
-            
-            _objectIdToGuidCache.Clear();
-            _guidToEntryCache.Clear();
-			
-			// Remove reference to assets that have been deleted at build time (e.g. probuilder meshes)
+            _objectIdToGuidCache = new Dictionary<int, T>();
+            _guidToEntryCache = new Dictionary<string, T>();
+
+            // Remove reference to assets that have been deleted at build time (e.g. probuilder meshes)
             for (var i = entries.Count - 1; i >= 0; i--)
             {
                 if (entries[i] == null || entries[i].@object == null)
@@ -32,21 +31,18 @@ namespace UnityRuntimeGuid
                     entries.RemoveAt(i);
                 }
             }
-            
+
             foreach (var entry in entries)
             {
                 _objectIdToGuidCache[entry.@object.GetInstanceID()] = entry;
                 _guidToEntryCache[entry.guid] = entry;
             }
         }
-        
+
         public GuidRegistry<T> Copy()
         {
             var copy = new GuidRegistry<T>
             {
-                _isCacheInitialized = _isCacheInitialized,
-                _objectIdToGuidCache = new Dictionary<int, T>(_objectIdToGuidCache),
-                _guidToEntryCache = new Dictionary<string, T>(_guidToEntryCache),
                 entries = new List<T>(entries)
             };
             return copy;
@@ -62,8 +58,8 @@ namespace UnityRuntimeGuid
 
         public void Clear()
         {
-            _objectIdToGuidCache.Clear();
-            _guidToEntryCache.Clear();
+            _objectIdToGuidCache = null;
+            _guidToEntryCache = null;
             entries.Clear();
         }
 
@@ -71,10 +67,10 @@ namespace UnityRuntimeGuid
         {
             if (guidEntry == null || guidEntry.@object == null)
                 return false;
-            
-            if(!_isCacheInitialized)
+
+            if (!IsCacheInitialized)
                 InitializeCache();
-            
+
             var added = _objectIdToGuidCache.TryAdd(guidEntry.@object.GetInstanceID(), guidEntry);
 
             if (added)
@@ -88,9 +84,9 @@ namespace UnityRuntimeGuid
 
         public bool TryGetEntry(Object obj, out T entry)
         {
-            if(!_isCacheInitialized)
+            if (!IsCacheInitialized)
                 InitializeCache();
-            
+
             if (obj != null)
                 return _objectIdToGuidCache.TryGetValue(obj.GetInstanceID(), out entry);
             entry = null;
@@ -99,25 +95,25 @@ namespace UnityRuntimeGuid
 
         public bool TryGetEntry(string guid, out T entry)
         {
-            if(!_isCacheInitialized)
+            if (!IsCacheInitialized)
                 InitializeCache();
             
             return _guidToEntryCache.TryGetValue(guid, out entry);
         }
 
         public T GetEntryByGuid(string guid)
-        { 
-            if(!_isCacheInitialized)
+        {
+            if (!IsCacheInitialized)
                 InitializeCache();
-            
+
             return _guidToEntryCache[guid];
         }
 
         public bool Remove(Object obj)
         {
-            if(!_isCacheInitialized)
+            if (!IsCacheInitialized)
                 InitializeCache();
-            
+
             if (!_objectIdToGuidCache.TryGetValue(obj.GetInstanceID(), out var entry))
                 return false;
             _guidToEntryCache.Remove(entry.guid);

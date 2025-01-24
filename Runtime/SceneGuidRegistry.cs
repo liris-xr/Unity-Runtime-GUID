@@ -19,7 +19,7 @@ namespace UnityRuntimeGuid
         [SerializeField] private string sceneGuid = Guid.NewGuid().ToString("N");
 
         [SerializeField] private GuidRegistry<SceneGuidRegistryEntry> registry = new();
-
+        
         public string SceneGuid => sceneGuid;
         
         public void Awake()
@@ -97,7 +97,7 @@ namespace UnityRuntimeGuid
 
         public SceneGuidRegistryEntry GetOrCreateEntry(Object obj)
         {
-            return registry.GetOrCreateEntry(obj, o =>
+            return registry.GetOrCreateEntry(obj, _ =>
                 new SceneGuidRegistryEntry
                 {
                     @object = obj,
