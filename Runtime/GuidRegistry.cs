@@ -14,9 +14,7 @@ namespace UnityRuntimeGuid
 
         [SerializeField] private List<T> entries = new();
 
-        private bool IsCacheInitialized => _objectIdToGuidCache != null && _guidToEntryCache != null &&
-                                           _objectIdToGuidCache.Count == entries.Count &&
-                                           _guidToEntryCache.Count == entries.Count;
+        private bool IsCacheInitialized => _objectIdToGuidCache != null && _guidToEntryCache != null;
 
         private void InitializeCache()
         {
