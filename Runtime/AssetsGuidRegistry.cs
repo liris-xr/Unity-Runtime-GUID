@@ -71,7 +71,7 @@ namespace UnityRuntimeGuid
             return registry.Copy();
         }
 
-        public bool TryGetValue(Object obj, out AssetGuidRegistryEntry entry)
+        public bool TryGetEntry(Object obj, out AssetGuidRegistryEntry entry)
         {
             return registry.TryGetEntry(obj, out entry);
         }

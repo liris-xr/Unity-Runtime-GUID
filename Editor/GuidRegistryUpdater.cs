@@ -102,15 +102,23 @@ namespace UnityRuntimeGuid.Editor
                 }
             }
 
+            // Avoid the asset being re-written because the order in
+            // which assets populated can change
+            foreach (AssetGuidRegistryEntry entry in prevAssetsGuid.GetAllEntries())
+            {
+                if (assets.Contains(entry.@object))
+                {
+                    assetsGuidRegistry.TryAdd(entry);
+                }
+            }
+
             foreach (var asset in assets.Where(IsAsset))
             {
                 if (asset.GetType().Namespace == typeof(UnityEditor.Editor).Namespace)
                     continue;
-                var hasPrevGuid = prevAssetsGuid.TryGetEntry(asset, out var prevAssetGuid);
+                var hasPrevGuid = assetsGuidRegistry.TryGetEntry(asset, out var _);
 
-                if (hasPrevGuid)
-                    assetsGuidRegistry.TryAdd(prevAssetGuid);
-                else
+                if (!hasPrevGuid)
                     assetsGuidRegistry.GetOrCreateEntry(asset);
             }
 
@@ -148,16 +156,26 @@ namespace UnityRuntimeGuid.Editor
                 sceneObjects.AddRange(EditorUtility.CollectDependencies(scene.GetRootGameObjects())
                     .Where(dependency => dependency != null));
 
+                // The order of the objects added is not the same everytime sceneObjects is populated.
+                // To SceneGuidRegistry being updated at each bild/playModeStateChanged.
+                // 1. Add all objects already in the registry in the same order
+                foreach (SceneGuidRegistryEntry entry in prevSceneObjectsGuid.GetAllEntries())
+                {
+                    if (sceneObjects.Contains(entry.@object))
+                    {
+                        sceneObjectsGuidRegistry.TryAdd(entry);
+                    }
+                }
+
+                // 2. Add new objects
                 foreach (var sceneObject in sceneObjects.Where(sceneObject => !IsAsset(sceneObject)))
                 {
                     if (sceneObject.GetType().Namespace == typeof(UnityEditor.Editor).Namespace)
                         continue;
 
-                    var hasPrevGuid = prevSceneObjectsGuid.TryGetEntry(sceneObject, out var prevSceneObjectGuid);
+                    var hasPrevGuid = sceneObjectsGuidRegistry.TryGetEntry(sceneObject, out var _);
 
-                    if (hasPrevGuid)
-                        sceneObjectsGuidRegistry.TryAdd(prevSceneObjectGuid);
-                    else
+                    if (!hasPrevGuid)
                         sceneObjectsGuidRegistry.GetOrCreateEntry(sceneObject);
                 }
 
