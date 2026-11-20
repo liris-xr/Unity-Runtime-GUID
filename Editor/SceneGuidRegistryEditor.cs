@@ -34,6 +34,14 @@ namespace UnityRuntimeGuid.Editor
             
             if (GUILayout.Button("Clear"))
                 GuidRegistryUpdater.ClearScenesGuidRegistry(new[] { sceneGuidRegistry.gameObject.scene.path });
+
+            if (GUILayout.Button("Regenerate GUIDs") && EditorUtility.DisplayDialog("Regenerate GUIDs",
+                    "Assign a new scene GUID and new object GUIDs to this scene? Records made before will no longer match its objects.",
+                    "Regenerate", "Cancel"))
+            {
+                DuplicateSceneGuidChecker.RegenerateGuids(sceneGuidRegistry.gameObject.scene.path);
+                GUIUtility.ExitGUI();
+            }
             
             GUILayout.BeginHorizontal();
             GUILayout.Label("Search by name:", GUILayout.ExpandWidth(false));

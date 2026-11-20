@@ -120,6 +120,21 @@ namespace UnityRuntimeGuid
             return true;
         }
 
+        /// <summary>
+        /// Assigns a new GUID to every entry, keeping the objects they identify.
+        /// </summary>
+        public void RegenerateGuids(Func<T, string> createGuidFunc)
+        {
+            foreach (var entry in entries)
+            {
+                if (entry != null)
+                    entry.guid = createGuidFunc(entry);
+            }
+
+            _objectIdToGuidCache = null;
+            _guidToEntryCache = null;
+        }
+
         public IReadOnlyList<T> GetAllEntries()
         {
             return entries;
