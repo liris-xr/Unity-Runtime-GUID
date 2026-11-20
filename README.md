@@ -53,6 +53,14 @@ You can access the GUIDs in the registries at runtime from anywhere in your appl
 
 See an example [here](Samples~/RuntimeGuidAccess.cs).
 
+### Duplicated scenes
+
+Duplicating a scene asset copies its `SceneGuidRegistry`, so the copy shares the scene GUID and object GUIDs of its source.
+The editor detects this when a scene is imported (e.g. after `Edit > Duplicate`) and offers to regenerate the GUIDs of
+the copy. You can also check the whole project from `Tools > Unity Runtime GUID > Find Duplicate Scene GUIDs`, or
+regenerate a scene's GUIDs from the `SceneGuidRegistry` inspector. Builds log an error when enabled build scenes share a
+scene GUID.
+
 ## Roadmap
 
 See the [open issues](https://github.com/liris-xr/Unity-Runtime-GUID/issues) for a full list of proposed features (and

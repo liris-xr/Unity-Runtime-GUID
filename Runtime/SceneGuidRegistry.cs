@@ -58,6 +58,18 @@ namespace UnityRuntimeGuid
             return sceneObjectsGuidRegistry;
         }
 
+#if UNITY_EDITOR
+        /// <summary>
+        /// Assigns a new scene GUID and a new GUID to every registered object. Used to make a duplicated scene asset,
+        /// which carries a copy of its source's registry, distinct from its source. The scene must be saved afterwards.
+        /// </summary>
+        public void RegenerateGuids()
+        {
+            sceneGuid = Guid.NewGuid().ToString("N");
+            registry.RegenerateGuids(_ => Guid.NewGuid().ToString("N"));
+        }
+#endif
+
         public bool TryAdd(SceneGuidRegistryEntry guidEntry)
         {
             return registry.TryAdd(guidEntry);
